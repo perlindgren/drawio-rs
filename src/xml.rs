@@ -10,11 +10,11 @@ pub struct Data<'a> {
 
 impl<'a> Data<'a> {
     /// create a new Element
-    pub fn new() -> Box<Self> {
-        Box::new(Data {
+    pub fn new() -> Self {
+        Data {
             attributes: vec![],
             style: Style::No,
-        })
+        }
     }
 
     // add attribute
@@ -39,19 +39,19 @@ pub enum Style {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Element<'a> {
     pub(crate) id: &'a str,
-    pub(crate) data: Box<Data<'a>>,
+    pub(crate) data: Data<'a>,
     pub(crate) inner: Vec<Element<'a>>,
 }
 
 /// builder pattern
 impl<'a> Element<'a> {
     /// create a new Element
-    pub fn new(id: &'a str) -> Box<Self> {
-        Box::new(Element {
+    pub fn new(id: &'a str) -> Self {
+        Element {
             id,
             data: Data::new(),
             inner: vec![],
-        })
+        }
     }
 
     /// add attribute to Element, allows tail chaining
@@ -60,14 +60,14 @@ impl<'a> Element<'a> {
         self
     }
 
-    /// add attribute to Element, allows tail chaining
+    /// add style to Element, allows tail chaining
     pub fn style(mut self, style: Style) -> Self {
         self.data.style(style);
         self
     }
 
     /// add inner to Element, allows tail chaining
-    pub fn add_inner(mut self, inner: Element<'a>) -> Self {
+    pub fn inner(mut self, inner: Element<'a>) -> Self {
         self.inner.push(inner);
         self
     }
@@ -157,7 +157,7 @@ mod test {
         let element = Element::new("elem")
             .attr("x", "13")
             .attr("y", "42")
-            .add_inner(
+            .inner(
                 Element::new("inner1")
                     .attr("x", "13")
                     .attr("y", "42")
@@ -166,7 +166,7 @@ mod test {
                         end_angle: 0.75,
                     }),
             )
-            .add_inner(Element::new("inner2").attr("y", "42"));
+            .inner(Element::new("inner2").attr("y", "42"));
 
         println!("{}", element);
     }
