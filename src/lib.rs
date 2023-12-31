@@ -14,4 +14,114 @@
 //   </diagram>
 // </mxfile>
 
-pub struct DrawIo {}
+// but a stripped down version like this is accepted as well:
+
+// <mxfile>
+//   <diagram>
+//     <mxGraphModel dx="320" dy="200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="320" pageHeight="200" math="0" shadow="0">
+//       <root>
+//         <mxCell id="0" />
+//         <mxCell id="1" parent="0" />
+//         <mxCell id="-" value="" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+//           <mxGeometry x="20" y="20" width="40" height="80" as="geometry" />
+//         </mxCell>
+//       </root>
+//     </mxGraphModel>
+//   </diagram>
+// </mxfile>
+
+// this seems to be a minimal config for a box
+
+// <mxfile>
+//   <diagram>
+//     <mxGraphModel pageWidth="320" pageHeight="200">
+//       <root>
+//         <mxCell vertex="1" >
+//           <mxGeometry x="20" y="20" width="40" height="80" as="geometry" />
+//         </mxCell>
+//       </root>
+//     </mxGraphModel>
+//   </diagram>
+// </mxfile>
+
+// pub struct DrawIo {
+//     dx: u32,
+//     dy: u32,
+//     grid: u32,
+//     gridSize: u32,
+//     guides: u32,
+//     tooltips: u32,
+//     connect: u32,
+//     arrows: u32,
+//     fold: u32,
+//     page: u32,
+//     pageScale: u32,
+//     pageWidth: u32,
+//     math: u32,
+//     shadow: u32,
+// }
+
+#[derive(Debug, Clone)]
+struct Data<'a>(&'a str, &'a str);
+
+#[derive(Debug, Clone)]
+struct Element<'a> {
+    id: &'a str,
+    data: Vec<Data<'a>>,
+    inner: Vec<Element<'a>>,
+}
+
+use indented::indented;
+use std::fmt; // Import `fmt`
+
+impl<'a> fmt::Display for Data<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}={:?} ", self.0, self.1)
+    }
+}
+
+impl<'a> fmt::Display for Element<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let data: String = self.data.iter().fold("".to_string(), |mut acc, d| {
+            acc.push_str(&format!("{}", d));
+            acc
+        });
+        writeln!(f, "<{} {}>", self.id, data)?;
+        for i in &self.inner {
+            write!(f, "{}", indented(i))?;
+        }
+        writeln!(f, "</{}>", self.id)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_data() {
+        println!("{}", Data("x", "13"));
+        assert_eq!("x=\"13\" ", format!("{}", Data("x", "13")));
+    }
+
+    #[test]
+    fn test_element() {
+        let element = Element {
+            id: "elem",
+            data: vec![Data("x", "13"), Data("y", "42")],
+            inner: vec![
+                Element {
+                    id: "inner1",
+                    data: vec![Data("x", "13"), Data("y", "42")],
+                    inner: vec![],
+                },
+                Element {
+                    id: "inner2",
+                    data: vec![Data("x", "42"), Data("y", "13")],
+                    inner: vec![],
+                },
+            ],
+        };
+        println!("{}", element);
+    }
+}
