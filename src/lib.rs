@@ -61,18 +61,42 @@
 //     shadow: u32,
 // }
 
-#[derive(Debug, Clone)]
-struct Data<'a>(&'a str, &'a str);
+#[derive(Debug, Clone, PartialEq)]
+pub struct Data<'a>(&'a str, &'a str);
 
-#[derive(Debug, Clone)]
-struct Element<'a> {
+#[derive(Debug, Clone, PartialEq)]
+pub struct Element<'a> {
     id: &'a str,
     data: Vec<Data<'a>>,
     inner: Vec<Element<'a>>,
 }
 
+/// builder pattern
+impl<'a> Element<'a> {
+    /// create a new Element
+    pub fn new(id: &'a str) -> Self {
+        Element {
+            id,
+            data: vec![],
+            inner: vec![],
+        }
+    }
+
+    /// add data to Element, allow tail chaining
+    pub fn add_data(&mut self, data: Data<'a>) -> &mut Self {
+        self.data.push(data);
+        self
+    }
+
+    /// add inner to Element, allows tail chaining
+    pub fn add_inner(&mut self, inner: Element<'a>) -> &mut Self {
+        self.inner.push(inner);
+        self
+    }
+}
+
 use indented::indented;
-use std::fmt; // Import `fmt`
+use std::fmt;
 
 impl<'a> fmt::Display for Data<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -123,5 +147,43 @@ mod test {
             ],
         };
         println!("{}", element);
+    }
+
+    #[test]
+    fn test_builder() {
+        let mut e = Element::new("elem");
+        e.add_data(Data("x", "13")).add_data(Data("y", "42"));
+        e.add_inner(Element {
+            id: "inner1",
+            data: vec![Data("x", "13"), Data("y", "42")],
+            inner: vec![],
+        })
+        .add_inner(Element {
+            id: "inner2",
+            data: vec![Data("x", "42"), Data("y", "13")],
+            inner: vec![],
+        });
+
+        assert_eq!(
+            e,
+            Element {
+                id: "elem",
+                data: vec![Data("x", "13"), Data("y", "42")],
+                inner: vec![
+                    Element {
+                        id: "inner1",
+                        data: vec![Data("x", "13"), Data("y", "42")],
+                        inner: vec![],
+                    },
+                    Element {
+                        id: "inner2",
+                        data: vec![Data("x", "42"), Data("y", "13")],
+                        inner: vec![],
+                    },
+                ],
+            }
+        );
+
+        println!("{}", e);
     }
 }
