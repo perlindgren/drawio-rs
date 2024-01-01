@@ -1,11 +1,10 @@
 // drawio
 
 use crate::xml::*;
-use srp::common::*;
 use std::default::Default;
 
 #[derive(Debug)]
-struct BarChart {
+pub struct BarChart {
     title: String,
     x: u32,
     y: u32,
@@ -13,7 +12,7 @@ struct BarChart {
     height: u32,
     label_margin: u32,
     bar_margin: u32,
-    //  label, data, color
+    //  label, (data, color)
     data: Vec<(String, (u32, String))>,
 }
 
@@ -25,8 +24,8 @@ impl Default for BarChart {
             y: 0,
             width: 100,
             height: 100,
-            bar_margin: 10,
             label_margin: 10,
+            bar_margin: 10,
             data: vec![],
         }
     }
@@ -39,9 +38,8 @@ impl BarChart {
         y: u32,
         width: u32,
         height: u32,
-        bar_margin: u32,
         label_margin: u32,
-
+        bar_margin: u32,
         data: Vec<(String, (u32, String))>,
     ) -> Self {
         BarChart {
@@ -61,9 +59,7 @@ impl BarChart {
         let x_scale = self.width as f32 / (self.data.len() + 1) as f32;
 
         let (id_vec, y_c_vec): (Vec<_>, Vec<_>) = self.data.into_iter().unzip();
-
         let (y_vec, _c_vec): (Vec<_>, Vec<_>) = y_c_vec.clone().into_iter().unzip();
-
         let y_max = *y_vec.iter().max().unwrap();
 
         println!("id_vec {:?}", id_vec);
@@ -80,8 +76,8 @@ impl BarChart {
             .map(|(x, (y, color))| {
                 let y_scaled = (y_scale * *y as f32) as u32;
                 Tag::rect(
-                    ((x as f32 + 0.5) * x_scale) as u32 + self.label_margin / 2,
-                    (self.height - self.label_margin) - y_scaled,
+                    self.x + ((x as f32 + 0.5) * x_scale) as u32 + self.label_margin / 2,
+                    self.y + (self.height - self.label_margin) - y_scaled,
                     x_scale as u32 - self.label_margin,
                     y_scaled,
                 )
@@ -95,8 +91,8 @@ impl BarChart {
             .map(|(x, id)| {
                 Tag::text(
                     id,
-                    ((x as f32 + 0.5) * x_scale) as u32,
-                    self.height - self.label_margin / 2,
+                    self.x + ((x as f32 + 0.5) * x_scale) as u32,
+                    self.y + self.height - self.label_margin / 2,
                     x_scale as u32,
                     self.label_margin,
                 )
@@ -113,6 +109,7 @@ impl BarChart {
 #[cfg(test)]
 mod test {
     use super::*;
+    use srp::common::*;
     use std::path::PathBuf;
     use std::str::FromStr;
 
@@ -120,10 +117,10 @@ mod test {
     fn test_bar() {
         let bar_chart = BarChart::new(
             "Task Deadlines".to_string(),
-            100,
-            100,
-            100,
-            100,
+            00,
+            00,
+            200,
+            200,
             10,
             10,
             vec![
