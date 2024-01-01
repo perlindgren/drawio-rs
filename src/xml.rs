@@ -1,8 +1,8 @@
 // XML data structures
-
+// use std::convert::Into;
+use std::fmt::Display;
+// use std::string::ToString;
 #[derive(Debug, Clone, PartialEq)]
-// pub struct Data<'a>(pub(crate) &'a str, pub(crate) &'a str);
-
 pub struct Data {
     pub(crate) attributes: Vec<(String, String)>,
     pub(crate) style: Vec<(String, String)>,
@@ -18,31 +18,20 @@ impl Data {
     }
 
     // add attribute
-    pub fn attr(&mut self, key: &str, value: &str) -> &mut Self {
-        self.attributes.push((key.to_string(), value.to_string()));
-        self
-    }
-
-    pub fn attr_u32(&mut self, key: &str, value: u32) -> &mut Self {
-        self.attributes.push((key.to_string(), value.to_string()));
-        self
-    }
-
-    // set style
-    pub fn style(&mut self, key: &str, value: &str) -> &mut Self {
-        self.style.push((key.to_string(), value.to_string()));
+    pub fn attr<T>(&mut self, key: &str, value: T) -> &mut Self
+    where
+        T: Display,
+    {
+        self.attributes.push((key.into(), value.to_string()));
         self
     }
 
     // set style
-    pub fn style_u32(&mut self, key: &str, value: u32) -> &mut Self {
-        self.style.push((key.to_string(), value.to_string()));
-        self
-    }
-
-    // set style
-    pub fn style_f32(&mut self, key: &str, value: f32) -> &mut Self {
-        self.style.push((key.to_string(), value.to_string()));
+    pub fn style<T>(&mut self, key: &str, value: T) -> &mut Self
+    where
+        T: Display,
+    {
+        self.style.push((key.into(), value.to_string()));
         self
     }
 }
@@ -66,32 +55,20 @@ impl Tag {
     }
 
     /// add attribute to Element, allows tail chaining
-    pub fn attr(mut self, key: &str, value: &str) -> Self {
+    pub fn attr<T>(mut self, key: &str, value: T) -> Self
+    where
+        T: Display,
+    {
         self.data.attr(key, value);
         self
     }
 
-    /// add attribute to Element, allows tail chaining
-    pub fn attr_u32(mut self, key: &str, value: u32) -> Self {
-        self.data.attr_u32(key, value);
-        self
-    }
-
     /// add style to Element, allows tail chaining
-    pub fn style(mut self, key: &str, value: &str) -> Self {
+    pub fn style<T>(mut self, key: &str, value: T) -> Self
+    where
+        T: Display,
+    {
         self.data.style(key, value);
-        self
-    }
-
-    /// add style to Element, allows tail chaining
-    pub fn style_u32(mut self, key: &str, value: u32) -> Self {
-        self.data.style_u32(key, value);
-        self
-    }
-
-    /// add style to Element, allows tail chaining
-    pub fn style_f32(mut self, key: &str, value: f32) -> Self {
-        self.data.style_f32(key, value);
         self
     }
 
@@ -157,7 +134,7 @@ mod test {
     #[test]
     fn test_builder_data_attributes() {
         let mut data = Data::new();
-        data.attr("x", "13");
+        data.attr("x", "13").attr("y", 13u32);
 
         println!("{}", data);
         assert_eq!(" x=\"13\"", format!("{}", data));
@@ -165,16 +142,11 @@ mod test {
 
     #[test]
     fn test_data_style() {
-        let data = Data {
-            attributes: vec![],
-            style: vec![("x".to_string(), "13".to_string())],
-        };
+        let mut data = Data::new();
+        data.style("x", "13").style("y", 13u32);
 
         println!("{}", data);
-        // assert_eq!(
-        //     " value=\"\" style=\"shape=mxgraph.basic.pie;startAngle=0;endAngle=0.75;\"",
-        //     format!("{}", data)
-        // );
+        assert_eq!(" style = \"x=13;y=13;\"", format!("{}", data));
     }
 
     #[test]
@@ -186,7 +158,7 @@ mod test {
                 Tag::new("inner1")
                     .attr("x", "13")
                     .attr("y", "42")
-                    .style("z", "0.0"),
+                    .style("z", 0.0),
             )
             .inner(Tag::new("inner2").attr("y", "42"));
 

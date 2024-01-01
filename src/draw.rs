@@ -19,48 +19,48 @@ mod mono {
 }
 
 impl Tag {
-    fn new_mxcell() -> Self {
+    pub fn mxcell() -> Self {
         Tag::new("mxCell")
-            .attr_u32("id", mono::get_new())
+            .attr("id", mono::get_new())
             .attr("vertex", "1")
             .attr("parent", "0")
     }
 
-    fn new_geometry(x: u32, y: u32, width: u32, height: u32) -> Self {
+    pub fn geometry(x: u32, y: u32, width: u32, height: u32) -> Self {
         Tag::new("mxGeometry")
-            .attr_u32("x", x)
-            .attr_u32("y", y)
-            .attr_u32("width", width)
-            .attr_u32("height", height)
+            .attr("x", x)
+            .attr("y", y)
+            .attr("width", width)
+            .attr("height", height)
             .attr("as", "geometry")
     }
 
-    fn new_pie(x: u32, y: u32, width: u32, height: u32, start_angle: f32, end_angle: f32) -> Self {
-        Tag::new_mxcell()
+    pub fn pie(x: u32, y: u32, width: u32, height: u32, start_angle: f32, end_angle: f32) -> Self {
+        Tag::mxcell()
             // shape=mxgraph.basic.pie;startAngle={};endAngle={};
             .style("shape", "mxgraph.basic.pie")
-            .style_f32("startAngle", start_angle)
-            .style_f32("endAngle", end_angle)
+            .style("startAngle", start_angle)
+            .style("endAngle", end_angle)
             .inner(
                 Tag::new("mxGeometry")
-                    .attr_u32("x", x)
-                    .attr_u32("y", y)
-                    .attr_u32("width", width)
-                    .attr_u32("height", height)
+                    .attr("x", x)
+                    .attr("y", y)
+                    .attr("width", width)
+                    .attr("height", height)
                     .attr("as", "geometry"),
             )
     }
 
-    fn new_box(x: u32, y: u32, width: u32, height: u32) -> Self {
-        Tag::new_mxcell().inner(Tag::new_geometry(x, y, width, height))
+    pub fn rect(x: u32, y: u32, width: u32, height: u32) -> Self {
+        Tag::mxcell().inner(Tag::geometry(x, y, width, height))
     }
 
-    fn new_root() -> Self {
+    pub fn root() -> Self {
         // root will have index "0"
         Tag::new("root").inner(Tag::new("mxCell").attr("id", "0"))
     }
 
-    fn new_draw_io(root: Tag) -> Self {
+    fn draw_io(root: Tag) -> Self {
         Tag::new("mxfile").inner(
             Tag::new("diagram").inner(
                 Tag::new("mxGraphModel")
@@ -73,16 +73,16 @@ impl Tag {
         )
     }
 
-    fn new_draw(inner: Vec<Tag>) -> Self {
-        let mut root = Tag::new_root();
+    pub fn draw(inner: Vec<Tag>) -> Self {
+        let mut root = Tag::root();
         for e in inner {
             root.inner_ref(e);
         }
 
-        Tag::new_draw_io(root)
+        Tag::draw_io(root)
     }
 
-    fn save(self, path: &PathBuf) -> io::Result<()> {
+    pub fn save(self, path: &PathBuf) -> io::Result<()> {
         let mut file = File::create(&path)?;
         let io_str = format!("{}", self);
         file.write_all(io_str.as_bytes())
@@ -96,26 +96,24 @@ mod test {
 
     #[test]
     fn test_mono() {
-        assert_eq!(mono::get_new(), 1);
-        assert_eq!(mono::get_new(), 2);
+        let m1 = mono::get_new();
+        let m2 = mono::get_new();
+        assert!(m2 > m1);
     }
 
     #[test]
-    fn test_box() {
-        let io = Tag::new_draw_io(Tag::new_root().inner(Tag::new_box(20, 20, 40, 40)));
+    fn test_rect() {
+        let io = Tag::draw_io(Tag::root().inner(Tag::rect(20, 20, 40, 40)));
         println!("{}", io);
-        io.save(&PathBuf::from_str("xml/out.drawio").unwrap())
+        io.save(&PathBuf::from_str("xml/rectangle.drawio").unwrap())
             .unwrap();
     }
 
     #[test]
-    fn test_boxes() {
-        let io = Tag::new_draw(vec![
-            Tag::new_box(20, 20, 40, 40),
-            Tag::new_box(100, 20, 40, 40),
-        ]);
+    fn test_rectangles() {
+        let io = Tag::draw(vec![Tag::rect(20, 20, 40, 40), Tag::rect(100, 20, 40, 40)]);
         println!("{}", io);
-        io.save(&PathBuf::from_str("xml/out.drawio").unwrap())
+        io.save(&PathBuf::from_str("xml/rectangles.drawio").unwrap())
             .unwrap();
     }
 
@@ -124,12 +122,12 @@ mod test {
         let bars: Vec<_> = [100, 200, 50, 150]
             .iter()
             .enumerate()
-            .map(|(x, y)| Tag::new_box((x * 100) as u32, 300 - y, 50, *y))
+            .map(|(x, y)| Tag::rect((x * 100) as u32, 300 - y, 50, *y))
             .collect();
-        let io = Tag::new_draw(bars);
+        let io = Tag::draw(bars);
 
         println!("{}", io);
-        io.save(&PathBuf::from_str("xml/out.drawio").unwrap())
+        io.save(&PathBuf::from_str("xml/bar_chart.drawio").unwrap())
             .unwrap();
     }
 
@@ -138,12 +136,12 @@ mod test {
         let x = 100;
         let y = 100;
         let radius = 100;
-        let io = Tag::new_draw(vec![
-            Tag::new_pie(x, y, radius, radius, 0.0, 0.25),
-            Tag::new_pie(x, y, radius, radius, 0.5, 0.75),
+        let io = Tag::draw(vec![
+            Tag::pie(x, y, radius, radius, 0.0, 0.25),
+            Tag::pie(x, y, radius, radius, 0.5, 0.75),
         ]);
         println!("{}", io);
-        io.save(&PathBuf::from_str("xml/out.drawio").unwrap())
+        io.save(&PathBuf::from_str("xml/pie_chart.drawio").unwrap())
             .unwrap();
     }
 
@@ -152,13 +150,13 @@ mod test {
         let x = 100;
         let y = 100;
         let radius = 100;
-        let io = Tag::new_draw(vec![
-            Tag::new_pie(x, y, radius, radius, 0.0, 0.25).style("fillColor", "#a20025"),
-            Tag::new_pie(x, y, radius, radius, 0.25, 0.45).style("fillColor", "#000025"),
-            Tag::new_pie(x, y, radius, radius, 0.45, 0.87).style("fillColor", "#008000"),
+        let io = Tag::draw(vec![
+            Tag::pie(x, y, radius, radius, 0.0, 0.25).style("fillColor", "#800000"),
+            Tag::pie(x, y, radius, radius, 0.25, 0.45).style("fillColor", "#000080"),
+            Tag::pie(x, y, radius, radius, 0.45, 0.87).style("fillColor", "#008000"),
         ]);
         println!("{}", io);
-        io.save(&PathBuf::from_str("xml/out.drawio").unwrap())
+        io.save(&PathBuf::from_str("xml/pie_chart_color.drawio").unwrap())
             .unwrap();
     }
 
