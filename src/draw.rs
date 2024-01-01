@@ -1,7 +1,7 @@
-// drawio
+// drawio primitive Tag operations
 
 use crate::xml::*;
-use srp::common::*;
+use std::fmt::Display;
 use std::fs::File;
 use std::io;
 use std::io::prelude::*;
@@ -55,6 +55,17 @@ impl Tag {
         Tag::mxcell().inner(Tag::geometry(x, y, width, height))
     }
 
+    pub fn text<T>(text: T, x: u32, y: u32, width: u32, height: u32) -> Self
+    where
+        T: Display,
+    {
+        Tag::mxcell()
+            .attr("value", text)
+            .style("text", "")
+            .style("strokeColor", "none")
+            .inner(Tag::geometry(x, y, width, height))
+    }
+
     pub fn root() -> Self {
         // root will have index "0"
         Tag::new("root").inner(Tag::new("mxCell").attr("id", "0"))
@@ -103,9 +114,17 @@ mod test {
 
     #[test]
     fn test_rect() {
-        let io = Tag::draw_io(Tag::root().inner(Tag::rect(20, 20, 40, 40)));
+        let io = Tag::draw(vec![Tag::rect(20, 20, 40, 40)]);
         println!("{}", io);
         io.save(&PathBuf::from_str("xml/rectangle.drawio").unwrap())
+            .unwrap();
+    }
+
+    #[test]
+    fn test_text() {
+        let io = Tag::draw(vec![Tag::text("hello world", 20, 20, 40, 40)]);
+        println!("{}", io);
+        io.save(&PathBuf::from_str("xml/text.drawio").unwrap())
             .unwrap();
     }
 
@@ -162,6 +181,7 @@ mod test {
 
     #[test]
     fn test_srp() {
+        use srp::common::*;
         let tasks = srp::task_sets::task_set1();
         tasks.store(&PathBuf::from("task_sets/task_set1.json")).ok();
         let tasks_loaded = Tasks::load(&PathBuf::from("task_sets/task_set1.json")).unwrap();
