@@ -1,115 +1,85 @@
 // drawio
 
 use crate::xml::*;
-use std::fs::File;
-use std::path::PathBuf;
-
 use srp::common::*;
-
+use std::fs::File;
 use std::io;
 use std::io::prelude::*;
-impl<'a> Element<'a> {
-    fn new_draw_io(id: &'a str) -> Self {
-        Element::new("mxfile").inner(Element::new("mxfile").inner(Element::new("diagram")))
+use std::path::PathBuf;
 
-        // id: "mxfile",
-        // data: vec![],
-        // inner: vec![Element {
-        //     id: "diagram",
-        //     data: vec![],
-        //     inner: vec![Element {
-        //         id: "mxGraphModel",
-        //         data: vec![
-        //             Data("dx", "320"),
-        //             Data("dy", "200"),
-        //             Data("pageWidth", "320"),
-        //             Data("pageHeight", "200"),
-        //         ],
-        //         inner: vec![Element {
-        //             id: "root",
-        //             data: vec![],
-        //             inner: vec![
-        //                 Element {
-        //                     id: "mxCell",
-        //                     data: vec![Data("id", "1")],
-        //                     inner: vec![],
-        //                 },
-        //                 Element {
-        //                     id: "mxCell",
-        //                     data: vec![
-        //                         Data("id", "2"),
-        //                         Data("vertex", "1"),
-        //                         Data("parent", "1"),
-        //                     ],
-        //                     inner: vec![Element {
-        //                         id: "mxGeometry",
-        //                         data: vec![
-        //                             Data("x", "20"),
-        //                             Data("y", "20"),
-        //                             Data("width", "40"),
-        //                             Data("height", "80"),
-        //                             Data("as", "geometry"),
-        //                         ],
-        //                         inner: vec![],
-        //                     }],
-        //                 },
-        //                 Element {
-        //                     id: "mxCell",
-        //                     data: vec![
-        //                         Data("id", "3"),
-        //                         Data("vertex", "1"),
-        //                         Data("parent", "1"),
-        //                     ],
-        //                     inner: vec![Element {
-        //                         id: "mxGeometry",
-        //                         data: vec![
-        //                             Data("x", "100"),
-        //                             Data("y", "20"),
-        //                             Data("width", "40"),
-        //                             Data("height", "80"),
-        //                             Data("as", "geometry"),
-        //                         ],
-        //                         inner: vec![],
-        //                     }],
-        //                 },
-        //                 //     <mxCell id="vEEG278DrkbecYB9cJd1-3" value=""
-        //                 // style="verticalLabelPosition=bottom;verticalAlign=top;html=1;
-        //                 // shape=mxgraph.basic.pie;startAngle=0.25;endAngle=0.6109615943053768;
-        //                 // fillColor=#1ba1e2;fontColor=#ffffff;strokeColor=#006EAF;" vertex="1" parent="1">
-        //                 //     <mxGeometry x="120" y="80" width="120" height="120" as="geometry" />
-        //                 //   </mxCell>
-        //                 //   <mxCell id="vEEG278DrkbecYB9cJd1-4" value="" style="verticalLabelPosition=bottom;verticalAlign=top;html=1;shape=mxgraph.basic.pie;startAngle=0;endAngle=0.25;fillColor=#6a00ff;fontColor=#ffffff;strokeColor=#3700CC;" vertex="1" parent="1">
-        //                 //     <mxGeometry x="120" y="80" width="120" height="120" as="geometry" />
-        //                 //   </mxCell>
-        //                 //   <mxCell id="vEEG278DrkbecYB9cJd1-5" value="" style="verticalLabelPosition=bottom;verticalAlign=top;html=1;shape=mxgraph.basic.pie;startAngle=0.6102574254185245;endAngle=0.8463754264756499;fillColor=#a20025;fontColor=#ffffff;strokeColor=#6F0000;" vertex="1" parent="1">
-        //                 //     <mxGeometry x="120" y="80" width="120" height="120" as="geometry" />
-        //                 //   </mxCell>
-        //                 Element {
-        //                     id: "mxCell",
-        //                     data: vec![
-        //                         Data("id", "4"),
-        //                         Data("shape", "mxgraph.basic.pie"),
-        //                         Data("startAngle", "0.25"),
-        //                         Data("endAngle", "0.5"),
-        //                         Data("vertex", "1"),
-        //                         Data("parent", "1"),
-        //                     ],
-        //                     inner: vec![Element {
-        //                         id: "mxGeometry",
-        //                         data: vec![
-        //                             Data("x", "150"),
-        //                             Data("y", "20"),
-        //                             Data("width", "40"),
-        //                             Data("height", "80"),
-        //                             Data("as", "geometry"),
-        //                         ],
-        //                         inner: vec![],
-        //                     }],
-        //                 },
-        //             ],
-        //         }],
-        //     }],
-        // }],
+mod mono {
+    use std::sync::atomic::{AtomicU32, Ordering};
+    static mut MONO: AtomicU32 = AtomicU32::new(1);
+
+    pub(crate) fn get_new() -> u32 {
+        let mono = unsafe { MONO.load(Ordering::SeqCst) };
+        unsafe { MONO.store(mono + 1, Ordering::SeqCst) }
+        mono
+    }
+}
+
+impl Tag {
+    fn new_mxcell() -> Self {
+        Tag::new("mxCell")
+            .attr_u32("id", mono::get_new())
+            .attr("vertex", "1")
+            .attr("parent", "0")
+    }
+
+    fn new_geometry(x: u32, y: u32, width: u32, height: u32) -> Self {
+        Tag::new("mxGeometry")
+            .attr_u32("x", x)
+            .attr_u32("y", y)
+            .attr_u32("width", width)
+            .attr_u32("height", height)
+            .attr("as", "geometry")
+    }
+
+    fn new_pie(x: u32, y: u32, width: u32, height: u32, start_angle: f32, end_angle: f32) -> Self {
+        Tag::new_mxcell()
+            // shape=mxgraph.basic.pie;startAngle={};endAngle={};
+            .style("shape", "mxgraph.basic.pie")
+            .style_f32("startAngle", start_angle)
+            .style_f32("endAngle", end_angle)
+            .inner(
+                Tag::new("mxGeometry")
+                    .attr_u32("x", x)
+                    .attr_u32("y", y)
+                    .attr_u32("width", width)
+                    .attr_u32("height", height)
+                    .attr("as", "geometry"),
+            )
+    }
+
+    fn new_box(x: u32, y: u32, width: u32, height: u32) -> Self {
+        Tag::new_mxcell().inner(Tag::new_geometry(x, y, width, height))
+    }
+
+    fn new_root() -> Self {
+        // root will have index "0"
+        Tag::new("root").inner(Tag::new("mxCell").attr("id", "0"))
+    }
+
+    fn new_draw_io(root: Tag) -> Self {
+        Tag::new("mxfile").inner(
+            Tag::new("diagram").inner(
+                Tag::new("mxGraphModel")
+                    .attr("dx", "320")
+                    .attr("dy", "200")
+                    .attr("pageWidth", "320")
+                    .attr("pageHeight", "200")
+                    .inner(root),
+            ),
+        )
+    }
+
+    fn new_draw(inner: Vec<Tag>) -> Self {
+        let mut root = Tag::new_root();
+        for e in inner {
+            root.inner_ref(e);
+        }
+
+        Tag::new_draw_io(root)
     }
 
     fn save(self, path: &PathBuf) -> io::Result<()> {
@@ -121,13 +91,72 @@ impl<'a> Element<'a> {
 
 #[cfg(test)]
 mod test {
+    use super::*;
     use std::str::FromStr;
 
-    use super::*;
+    #[test]
+    fn test_mono() {
+        assert_eq!(mono::get_new(), 1);
+        assert_eq!(mono::get_new(), 2);
+    }
 
     #[test]
-    fn test_simple() {
-        let io = Element::new_draw_io("hello world");
+    fn test_box() {
+        let io = Tag::new_draw_io(Tag::new_root().inner(Tag::new_box(20, 20, 40, 40)));
+        println!("{}", io);
+        io.save(&PathBuf::from_str("xml/out.drawio").unwrap())
+            .unwrap();
+    }
+
+    #[test]
+    fn test_boxes() {
+        let io = Tag::new_draw(vec![
+            Tag::new_box(20, 20, 40, 40),
+            Tag::new_box(100, 20, 40, 40),
+        ]);
+        println!("{}", io);
+        io.save(&PathBuf::from_str("xml/out.drawio").unwrap())
+            .unwrap();
+    }
+
+    #[test]
+    fn test_bar_chart() {
+        let bars: Vec<_> = [100, 200, 50, 150]
+            .iter()
+            .enumerate()
+            .map(|(x, y)| Tag::new_box((x * 100) as u32, 300 - y, 50, *y))
+            .collect();
+        let io = Tag::new_draw(bars);
+
+        println!("{}", io);
+        io.save(&PathBuf::from_str("xml/out.drawio").unwrap())
+            .unwrap();
+    }
+
+    #[test]
+    fn test_pie() {
+        let x = 100;
+        let y = 100;
+        let radius = 100;
+        let io = Tag::new_draw(vec![
+            Tag::new_pie(x, y, radius, radius, 0.0, 0.25),
+            Tag::new_pie(x, y, radius, radius, 0.5, 0.75),
+        ]);
+        println!("{}", io);
+        io.save(&PathBuf::from_str("xml/out.drawio").unwrap())
+            .unwrap();
+    }
+
+    #[test]
+    fn test_pie_color() {
+        let x = 100;
+        let y = 100;
+        let radius = 100;
+        let io = Tag::new_draw(vec![
+            Tag::new_pie(x, y, radius, radius, 0.0, 0.25).style("fillColor", "#a20025"),
+            Tag::new_pie(x, y, radius, radius, 0.25, 0.45).style("fillColor", "#000025"),
+            Tag::new_pie(x, y, radius, radius, 0.45, 0.87).style("fillColor", "#008000"),
+        ]);
         println!("{}", io);
         io.save(&PathBuf::from_str("xml/out.drawio").unwrap())
             .unwrap();
