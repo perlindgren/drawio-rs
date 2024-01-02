@@ -1,0 +1,22 @@
+<mxfile>
+    <diagram>
+        <mxGraphModel dx="320" dy="200" pageWidth="320" pageHeight="200">
+            <root>
+                <mxCell id="0">
+                </mxCell>
+                <mxCell id="1" vertex="1" parent="0" style = "shape=mxgraph.basic.pie;startAngle=0;endAngle=0.25;fillColor=#800000;">
+                    <mxGeometry x="100" y="100" width="100" height="100" as="geometry">
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="2" vertex="1" parent="0" style = "shape=mxgraph.basic.pie;startAngle=0.25;endAngle=0.45;fillColor=#000080;">
+                    <mxGeometry x="100" y="100" width="100" height="100" as="geometry">
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="3" vertex="1" parent="0" style = "shape=mxgraph.basic.pie;startAngle=0.45;endAngle=0.87;fillColor=#008000;">
+                    <mxGeometry x="100" y="100" width="100" height="100" as="geometry">
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

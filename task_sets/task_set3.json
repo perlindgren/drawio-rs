@@ -1,0 +1,38 @@
+[
+    {
+        "id": "T1",
+        "prio": 1,
+        "deadline": 100,
+        "inter_arrival": 100,
+        "trace": {
+            "id": "T1",
+            "start": 0,
+            "end": 20,
+            "inner": []
+        }
+    },
+    {
+        "id": "T2",
+        "prio": 2,
+        "deadline": 100,
+        "inter_arrival": 100,
+        "trace": {
+            "id": "T2",
+            "start": 0,
+            "end": 50,
+            "inner": []
+        }
+    },
+    {
+        "id": "T3",
+        "prio": 3,
+        "deadline": 20,
+        "inter_arrival": 50,
+        "trace": {
+            "id": "T3",
+            "start": 0,
+            "end": 10,
+            "inner": []
+        }
+    }
+]

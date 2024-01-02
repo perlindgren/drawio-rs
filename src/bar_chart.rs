@@ -1,4 +1,4 @@
-// drawio
+// bar_chart
 
 use crate::xml::*;
 use std::default::Default;
@@ -55,20 +55,14 @@ impl BarChart {
     }
 
     pub fn draw(self) -> Tag {
-        let bars_height = self.height - self.label_margin;
+        // we reserve space at top and bottom
+        let bars_height = self.height - (self.label_margin * 2);
+
         let x_scale = self.width as f32 / (self.data.len() + 1) as f32;
-
         let (id_vec, y_c_vec): (Vec<_>, Vec<_>) = self.data.into_iter().unzip();
-        let (y_vec, _c_vec): (Vec<_>, Vec<_>) = y_c_vec.clone().into_iter().unzip();
+        let (y_vec, _): (Vec<_>, Vec<_>) = y_c_vec.clone().into_iter().unzip();
         let y_max = *y_vec.iter().max().unwrap();
-
-        println!("id_vec {:?}", id_vec);
-        println!("y_vec {:?}", y_vec);
-        println!("y_max {:?}", y_max);
-
         let y_scale = bars_height as f32 / y_max as f32;
-
-        println!("x_scale {}, y_scale {}", x_scale, y_scale);
 
         let mut bars: Vec<_> = y_c_vec
             .iter()
@@ -76,9 +70,9 @@ impl BarChart {
             .map(|(x, (y, color))| {
                 let y_scaled = (y_scale * *y as f32) as u32;
                 Tag::rect(
-                    self.x + ((x as f32 + 0.5) * x_scale) as u32 + self.label_margin / 2,
-                    self.y + (self.height - self.label_margin) - y_scaled,
-                    x_scale as u32 - self.label_margin,
+                    self.x + self.bar_margin / 2 + ((x as f32 + 0.5) * x_scale) as u32, // offset by half bar_margin
+                    self.y + self.label_margin + (bars_height - y_scaled), // offset by label_margin from top
+                    x_scale as u32 - self.bar_margin,
                     y_scaled,
                 )
                 .style("fillColor", color)
@@ -92,7 +86,7 @@ impl BarChart {
                 Tag::text(
                     id,
                     self.x + ((x as f32 + 0.5) * x_scale) as u32,
-                    self.y + self.height - self.label_margin / 2,
+                    self.y + self.height - self.label_margin,
                     x_scale as u32,
                     self.label_margin,
                 )
@@ -100,6 +94,7 @@ impl BarChart {
             .collect();
 
         bars.append(&mut texts);
+        bars.push(Tag::text(self.title, 0, 0, self.width, self.label_margin));
         let io = Tag::draw(bars);
 
         io
@@ -117,15 +112,16 @@ mod test {
     fn test_bar() {
         let bar_chart = BarChart::new(
             "Task Deadlines".to_string(),
-            00,
-            00,
+            0,
+            0,
             200,
             200,
-            10,
+            20,
             10,
             vec![
                 ("T1".into(), (50, "#800000".to_string())),
                 ("T2".into(), (100, "#008000".to_string())),
+                ("T3".into(), (25, "#000080".to_string())),
             ],
         );
 
