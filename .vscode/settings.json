@@ -1,10 +1,13 @@
 {
   "cSpell.ignoreWords": [
     "Drawio",
+    "Graphviz",
     "WCET",
     "mxcell",
     "mxfile",
     "mxgraph",
+    "plotlib",
+    "plotly",
     "prio"
   ]
 }
