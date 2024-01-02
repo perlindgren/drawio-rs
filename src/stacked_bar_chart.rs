@@ -14,8 +14,8 @@ pub struct StackedBarChart {
     bar_margin: u32,
     //  label, color
     stack_labels: Vec<(String, String)>,
-    //  label, (data, color)
-    data: Vec<(String, Vec<u32>)>,
+    //  label, (bound, vector of values)
+    data: Vec<(String, (u32, Vec<u32>))>,
 }
 
 impl Default for StackedBarChart {
@@ -35,6 +35,7 @@ impl Default for StackedBarChart {
 }
 
 impl StackedBarChart {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         title: String,
         x: u32,
@@ -44,7 +45,7 @@ impl StackedBarChart {
         label_margin: u32,
         bar_margin: u32,
         stack_labels: Vec<(String, String)>,
-        data: Vec<(String, Vec<u32>)>,
+        data: Vec<(String, (u32, Vec<u32>))>,
     ) -> Self {
         StackedBarChart {
             title,
@@ -66,17 +67,20 @@ impl StackedBarChart {
         let x_scale = self.width as f32 / (self.data.len() + 1) as f32;
         let (id_vec, y_vec): (Vec<_>, Vec<_>) = self.data.into_iter().unzip();
 
-        let y_vec_sum: Vec<u32> = y_vec.iter().map(|bar| bar.iter().sum()).collect(); // sum each stack
-        let y_max = *y_vec_sum.iter().max().unwrap(); // overall max stack
+        let y_vec_sum: Vec<u32> = y_vec.iter().map(|(_, bar)| bar.iter().sum()).collect(); // sum each stack
+        let y_vec_top: Vec<u32> = y_vec.iter().map(|(top, _)| *top).collect(); // sum each stack
+
+        let y_max = (*y_vec_sum.iter().max().unwrap()).max(*y_vec_top.iter().max().unwrap()); // overall max stack
 
         let y_scale = bars_height as f32 / y_max as f32;
+        println!("y_scale {}", y_scale);
 
         // create a vector of stacks
         let stacks: Vec<(_, Vec<_>)> = y_vec
             .iter()
             .enumerate()
-            .map(|(x, stack)| {
-                stack.iter().enumerate().fold(
+            .map(|(x, (top, stack))| {
+                let (acc, mut stack) = stack.iter().enumerate().fold(
                     (0u32, vec![]),
                     |(acc_value, mut acc_stack), (i, y)| {
                         let y_scaled = (y_scale * *y as f32) as u32;
@@ -92,12 +96,25 @@ impl StackedBarChart {
 
                         (acc_value + y_scaled, acc_stack)
                     },
-                )
+                );
+                let y_scaled = (y_scale * *top as f32) as u32;
+                println!("y_scale {}, top {}, y_scaled {}", y_scale, top, y_scaled);
+                stack.push(Tag::line(
+                    self.x + self.bar_margin / 2 + ((x as f32 + 0.5) * x_scale) as u32, // offset by half bar_margin
+                    self.y + self.label_margin + bars_height - y_scaled, // offset by label_margin from top
+                    self.x
+                        + self.bar_margin / 2
+                        + ((x as f32 + 0.5) * x_scale) as u32
+                        + x_scale as u32
+                        - self.bar_margin, // offset by half bar_margin
+                    self.y + self.label_margin + bars_height - y_scaled, // offset by label_margin from top
+                ));
+                (acc, stack)
             })
             .collect();
 
         // flatten into a vector of rectangles, skip the accumulated value
-        let mut bars: Vec<_> = stacks.into_iter().map(|(_, vec)| vec).flatten().collect();
+        let mut bars: Vec<_> = stacks.into_iter().flat_map(|(_, vec)| vec).collect();
 
         let mut texts: Vec<_> = id_vec
             .iter()
@@ -147,9 +164,7 @@ impl StackedBarChart {
             );
         }
 
-        let io = Tag::draw(bars);
-
-        io
+        Tag::draw(bars)
     }
 }
 
@@ -161,7 +176,7 @@ mod test {
     use std::str::FromStr;
 
     #[test]
-    fn test_bar() {
+    fn test_stacked_bars() {
         let bar_chart = StackedBarChart::new(
             "Task Response Times".to_string(),
             0,
@@ -176,9 +191,9 @@ mod test {
                 ("Preemption".to_string(), "#800000".to_string()),
             ],
             vec![
-                ("T1".into(), vec![50, 100]),
-                ("T2".into(), vec![25, 75]),
-                ("T3".into(), vec![10, 50, 75]),
+                ("T1".into(), (160, vec![50, 100])),
+                ("T2".into(), (120, vec![25, 75])),
+                ("T3".into(), (140, vec![10, 50, 75])),
             ],
         );
 

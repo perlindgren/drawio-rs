@@ -2,7 +2,7 @@
 // use std::convert::Into;
 use std::fmt::Display;
 // use std::string::ToString;
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct Data {
     pub(crate) attributes: Vec<(String, String)>,
     pub(crate) style: Vec<(String, String)>,
@@ -86,27 +86,28 @@ impl Tag {
 
 use indented::indented;
 use std::fmt;
+use std::fmt::Write;
 
 impl fmt::Display for Data {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for attr in &self.attributes {
             write!(f, " {}={:?}", attr.0, attr.1)?;
         }
-        if self.style.len() > 0 {
+        if !self.style.is_empty() {
             write!(
                 f,
                 " style = \"{}\"",
-                self.style
-                    .iter()
-                    .map(|(k, v)| format!("{}={};", k, v))
-                    .collect::<String>()
+                self.style.iter().fold(String::new(), |mut output, (k, v)| {
+                    let _ = write!(output, "{}={};", k, v);
+                    output
+                })
             )?;
         }
         Ok(())
     }
 }
 
-impl<'a> fmt::Display for Tag {
+impl fmt::Display for Tag {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, "<{}{}>", self.id, self.data)?;
         for i in &self.inner {
@@ -134,10 +135,10 @@ mod test {
     #[test]
     fn test_builder_data_attributes() {
         let mut data = Data::new();
-        data.attr("x", "13").attr("y", 13u32);
+        data.attr("x", "13").attr("y", 13);
 
         println!("{}", data);
-        assert_eq!(" x=\"13\"", format!("{}", data));
+        assert_eq!(" x=\"13\" y=\"13\"", format!("{}", data));
     }
 
     #[test]

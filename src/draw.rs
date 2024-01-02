@@ -9,7 +9,8 @@ use std::path::PathBuf;
 
 mod mono {
     use std::sync::atomic::{AtomicU32, Ordering};
-    static mut MONO: AtomicU32 = AtomicU32::new(1);
+    // start from 2, ids 0 and 1 reserved
+    static mut MONO: AtomicU32 = AtomicU32::new(2);
 
     pub(crate) fn get_new() -> u32 {
         let mono = unsafe { MONO.load(Ordering::SeqCst) };
@@ -63,15 +64,41 @@ impl Tag {
             .attr("value", text)
             .style("text", "")
             .style("strokeColor", "none")
-            .inner(Tag::geometry(x, y, width, height))
+            .inner(Tag::geometry(x, y + 5, width, height - 10)) // to avoid clipping?
     }
 
-    pub fn root() -> Self {
-        // root will have index "0"
-        Tag::new("root").inner(Tag::new("mxCell").attr("id", "0"))
+    pub fn line(x_source: u32, y_source: u32, x_target: u32, y_target: u32) -> Self {
+        // <mxCell id="SueEsk_oEnAojZpxmG0U-1" value="" style="endArrow=none;html=1;rounded=0;" edge="1" parent="1">
+        //   <mxGeometry width="50" height="50" relative="1" as="geometry">
+        //     <mxPoint x="40" y="40" as="sourcePoint" />
+        //     <mxPoint x="240" y="40" as="targetPoint" />
+        //   </mxGeometry>
+        // </mxCell>
+        Tag::mxcell()
+            .attr("edge", 1)
+            .style("endArrow", "none")
+            .inner(
+                Tag::new("mxGeometry")
+                    .attr("width", 50)
+                    .attr("height", 50)
+                    .attr("relative", 1)
+                    .attr("as", "geometry")
+                    .inner(
+                        Tag::new("mxPoint")
+                            .attr("x", x_source)
+                            .attr("y", y_source)
+                            .attr("as", "sourcePoint"),
+                    )
+                    .inner(
+                        Tag::new("mxPoint")
+                            .attr("x", x_target)
+                            .attr("y", y_target)
+                            .attr("as", "targetPoint"),
+                    ),
+            )
     }
 
-    fn draw_io(root: Tag) -> Self {
+    fn draw_header(root: Tag) -> Self {
         Tag::new("mxfile").inner(
             Tag::new("diagram").inner(
                 Tag::new("mxGraphModel")
@@ -85,16 +112,18 @@ impl Tag {
     }
 
     pub fn draw(inner: Vec<Tag>) -> Self {
-        let mut root = Tag::root();
+        let mut root = Tag::new("root")
+            .inner(Tag::new("mxCell").attr("id", "0"))
+            .inner(Tag::new("mxCell").attr("id", "1").attr("parent", "0"));
         for e in inner {
             root.inner_ref(e);
         }
 
-        Tag::draw_io(root)
+        Tag::draw_header(root)
     }
 
     pub fn save(self, path: &PathBuf) -> io::Result<()> {
-        let mut file = File::create(&path)?;
+        let mut file = File::create(path)?;
         let io_str = format!("{}", self);
         file.write_all(io_str.as_bytes())
     }
@@ -125,6 +154,14 @@ mod test {
         let io = Tag::draw(vec![Tag::text("hello world", 20, 20, 40, 40)]);
         println!("{}", io);
         io.save(&PathBuf::from_str("xml/text.drawio").unwrap())
+            .unwrap();
+    }
+
+    #[test]
+    fn test_line() {
+        let io = Tag::draw(vec![Tag::line(20, 20, 40, 40)]);
+        println!("{}", io);
+        io.save(&PathBuf::from_str("xml/line.drawio").unwrap())
             .unwrap();
     }
 

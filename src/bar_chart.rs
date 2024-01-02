@@ -32,6 +32,7 @@ impl Default for BarChart {
 }
 
 impl BarChart {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         title: String,
         x: u32,
@@ -95,9 +96,7 @@ impl BarChart {
 
         bars.append(&mut texts);
         bars.push(Tag::text(self.title, 0, 0, self.width, self.label_margin));
-        let io = Tag::draw(bars);
-
-        io
+        Tag::draw(bars)
     }
 }
 
