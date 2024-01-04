@@ -191,7 +191,7 @@ mod test {
                 ("Preemption".to_string(), "#800000".to_string()),
             ],
             vec![
-                ("T1".into(), (160, vec![50, 100])),
+                ("T1".into(), (320, vec![50, 100])),
                 ("T2".into(), (120, vec![25, 75])),
                 ("T3".into(), (140, vec![10, 50, 75])),
             ],

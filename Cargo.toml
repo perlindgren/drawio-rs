@@ -7,5 +7,5 @@ edition = "2021"
 
 [dependencies]
 indented = "0.1.0"
-#srp = { git = "https://github.com/perlindgren/srp-analysis.git" }
-srp = { path = "../srp-analysis" }
+srp = { git = "https://github.com/perlindgren/srp-analysis.git" }
+# srp = { path = "../srp-analysis" }
