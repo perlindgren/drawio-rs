@@ -67,6 +67,16 @@ Based on that, `bar_chart.rs`, `stacked_bar_chart.rs`, and `pie_chart.rs` can be
 
 --
 
+## Testing
+
+You can run individual tests, e.g., the `test_export` and view output by:
+
+```shell
+cargo test test_export -- --nocapture
+```
+
+--
+
 ## References
 
 - [draw.io] For local download and documentation.
