@@ -6,7 +6,7 @@
                 </mxCell>
                 <mxCell id="1" parent="0">
                 </mxCell>
-                <mxCell id="23" vertex="1" parent="0" value="hello world" style = "text=;strokeColor=none;">
+                <mxCell id="22" vertex="1" parent="0" value="hello world" style = "text=;strokeColor=none;">
                     <mxGeometry x="20" y="25" width="40" height="30" as="geometry">
                     </mxGeometry>
                 </mxCell>

@@ -2,12 +2,21 @@
   "cSpell.ignoreWords": [
     "Drawio",
     "Graphviz",
+    "Lindgren",
     "WCET",
     "mxcell",
     "mxfile",
     "mxgraph",
     "plotlib",
     "plotly",
-    "prio"
-  ]
+    "prio",
+    "pwsh"
+  ],
+  // "terminal.integrated.env.windows": {
+  //   "PATH": "C:\\Program Files\\draw.io\\;${env:PATH}"
+  // },
+  // // "terminal.integrated.defaultProfile.windows": "Windows PowerShell",
+  //   "rust-analyzer.runnableEnv": {
+  //       "PATH": "C:/Users/name/.cargo/bin"
+  //   },
 }

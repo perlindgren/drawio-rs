@@ -1,3 +1,5 @@
+use drawio::xml::*;
+
 fn main() {
-    println!("Raw generation of drawio box");
+    Tag::new("hello_world").export();
 }
